@@ -1,0 +1,173 @@
+package player;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Player {
+    private String name;
+    private int health;
+    private int experience;
+    private List<String> inventory;
+
+    public Player(String name) {
+        this.name = name;
+        this.health = 100;
+        this.experience = 0;
+        this.inventory = new ArrayList<>();
+    }
+
+    public void takeDamage(int damage) {
+        health -= damage;
+    }
+
+    public void gainExperience(int exp) {
+        experience += exp;
+    }
+
+    public void addItem(String item) {
+        inventory.add(item);
+    }
+
+    public int getHealth() { return health; }
+    public int getExperience() { return experience; }
+    public String getName() { return name; }
+}
+
+// Combat Manager
+package combat;
+
+import player.Player;
+import enemies.Enemy;
+
+public class CombatManager {
+    public void fight(Player player, Enemy enemy) {
+        System.out.println(player.getName() + " fights " + enemy.getName());
+        enemy.attack(player);
+        if (player.getHealth() > 0) {
+            player.gainExperience(enemy.getExperienceReward());
+        }
+    }
+}
+
+// Enemy Class
+package enemies;
+
+import player.Player;
+
+public abstract class Enemy {
+    protected String name;
+    protected int damage;
+    protected int experienceReward;
+
+    public Enemy(String name, int damage, int experienceReward) {
+        this.name = name;
+        this.damage = damage;
+        this.experienceReward = experienceReward;
+    }
+
+    public abstract void attack(Player player);
+
+    public int getExperienceReward() { return experienceReward; }
+    public String getName() { return name; }
+}
+
+// Skeleton Class
+package enemies;
+
+import player.Player;
+
+public class Skeleton extends Enemy {
+    public Skeleton() { super("Skeleton", 10, 20); }
+    public void attack(Player player) { player.takeDamage(damage); }
+}
+
+// Zombie Class
+package enemies;
+
+import player.Player;
+
+public class Zombie extends Enemy {
+    public Zombie() { super("Zombie", 15, 30); }
+    public void attack(Player player) { player.takeDamage(damage); }
+}
+
+// Vampire Class
+package enemies;
+
+import player.Player;
+
+public class Vampire extends Enemy {
+    public Vampire() { super("Vampire", 25, 50); }
+    public void attack(Player player) { player.takeDamage(damage); }
+}
+
+// Item Manager
+package items;
+
+import player.Player;
+
+public class ItemManager {
+    public void pickUpItem(Player player, String item) {
+        player.addItem(item);
+        if (item.equals("Gold Coin")) player.gainExperience(5);
+        else if (item.equals("Health Elixir")) player.takeDamage(-20);
+        else if (item.equals("Magic Scroll")) player.gainExperience(15);
+    }
+}
+
+// Level Manager
+package level;
+
+import player.Player;
+
+public class LevelManager {
+    private int level = 1;
+
+    public int getLevel() { return level; }
+    public void nextLevel(Player player) {
+        level++;
+        player.takeDamage(-100); // Reset health
+    }
+}
+
+// Main Game
+package main;
+
+import player.Player;
+import combat.CombatManager;
+import items.ItemManager;
+import level.LevelManager;
+import enemies.Enemy;
+import enemies.Skeleton;
+import enemies.Zombie;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainGame {
+    public static void main(String[] args) {
+        Player player = new Player("Adventurer");
+        CombatManager combatManager = new CombatManager();
+        ItemManager itemManager = new ItemManager();
+        LevelManager levelManager = new LevelManager();
+
+        List<Enemy> enemies = new ArrayList<>();
+        enemies.add(new Skeleton());
+        enemies.add(new Zombie());
+        
+        List<String> items = new ArrayList<>();
+        items.add("Gold Coin");
+        items.add("Health Elixir");
+        
+        for (Enemy enemy : enemies) {
+            combatManager.fight(player, enemy);
+        }
+        
+        for (String item : items) {
+            itemManager.pickUpItem(player, item);
+        }
+
+        levelManager.nextLevel(player);
+        System.out.println("Player reached level " + levelManager.getLevel());
+    }
+}
